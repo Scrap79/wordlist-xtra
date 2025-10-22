@@ -1,0 +1,36 @@
+name: Sync EthicalHackingFromScratch
+
+on:
+  workflow_dispatch: {}           # lets you run it manually via Actions → Sync EthicalHackingFromScratch → Run workflow
+  schedule:
+    - cron: '0 4 * * 1'           # weekly: Monday 04:00 UTC (edit if you want different schedule)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync from upstream repo (bookworm52/EthicalHackingFromScratch)
+        uses: repo-sync/github-sync@v3
+        with:
+          source_repo: bookworm52/EthicalHackingFromScratch
+          source_branch: main
+          destination_branch: main
+          destination_dir: wordlists/EthicalHackingFromScratch
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Automated sync from bookworm52/EthicalHackingFromScratch"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit."
+          fi
